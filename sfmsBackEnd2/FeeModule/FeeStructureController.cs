@@ -42,7 +42,7 @@ namespace sfmsBackEnd2.FeeModule
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetByID(Guid id)
+        public IActionResult GetByID(int id)
         {
 
              using var conn = databaseConnection.GetConnection();
@@ -120,7 +120,7 @@ namespace sfmsBackEnd2.FeeModule
         }
 
         [HttpDelete]
-        public IActionResult Delete(Guid id)
+        public IActionResult Delete(int id)
         {
 
             using var conn = databaseConnection.GetConnection();

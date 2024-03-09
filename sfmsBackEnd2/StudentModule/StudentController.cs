@@ -5,7 +5,6 @@ using sfmsbackend2.StudentModule;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace sfmsBackEnd2.StudentModule
 {
     [Route("api/[controller]")]
@@ -38,7 +37,23 @@ namespace sfmsBackEnd2.StudentModule
             using var conn = databaseConnection.GetConnection();
             conn.Open();
 
-            var student = conn.Query<Student>("SELECT * FROM Student WHERE id = @id", new { id = id });
+            var student = conn.Query<Student>(
+                """
+                    SELECT 
+                    id,
+                    first_name,
+                    last_name,
+                    standard,
+                    parents_name,
+                    parents_mobile,
+                    comment,
+                    school_name,
+                    date_of_birth,
+                    date_of_admission,
+                    gender 
+                    FROM Student WHERE id = @id
+                """
+                , new { id = id });
 
             return Ok(student);
 
@@ -88,7 +103,6 @@ namespace sfmsBackEnd2.StudentModule
         [HttpPut]
         public IActionResult Update(Student student)
         {
-
             using var conn = databaseConnection.GetConnection();
             conn.Open();
 
