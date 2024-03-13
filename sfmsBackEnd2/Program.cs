@@ -1,6 +1,8 @@
 
 
 using db;
+using Microsoft.VisualBasic;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,19 @@ app.UseHttpsRedirection();
 app.UseCors("Any");
 
 app.UseAuthorization();
+
+app.Use(async (context,next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync(ex.Message);
+    }
+});
 
 app.MapControllers();
 

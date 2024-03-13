@@ -43,7 +43,7 @@ namespace sfmsBackEnd2.FeeModule
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetByID(Guid id)
+        public IActionResult GetByID(int id)
         {
 
              using var conn = databaseConnection.GetConnection();
@@ -93,6 +93,33 @@ namespace sfmsBackEnd2.FeeModule
                 FETCH NEXT 
                     @take ROWS ONLY;              
                 """, new { skip = skip, take = take });
+
+            return Ok(feeTransections);
+
+        }
+
+        [HttpGet("student/{id}")]
+        public IActionResult GetByStudentID(int id)
+        {
+
+             using var conn = databaseConnection.GetConnection();
+
+            conn.Open();
+
+            var feeTransections = conn.Query<FeeTransection>(
+                """
+                SELECT
+                	id,
+                    amount,
+                    student_id,
+                    comment,
+                    date_of_transection,
+                    mode_of_transection
+                FROM
+                	FeeTransection
+                WHERE
+                    student_id = @id 
+                """, new { id = id });
 
             return Ok(feeTransections);
 
@@ -152,8 +179,8 @@ namespace sfmsBackEnd2.FeeModule
 
         }
 
-        [HttpDelete]
-        public IActionResult Delete(Guid id)
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
         {
 
              using var conn = databaseConnection.GetConnection();
@@ -161,7 +188,7 @@ namespace sfmsBackEnd2.FeeModule
 
             conn.Open();
 
-            conn.Query<FeeTransection>("DELETE FROM FeeTransection WHERE id = @id", new { id = id });
+            conn.Query<FeeTransection>("DELETE FROM FeeTransection WHERE id = @id", new { id = id });
 
             return Ok();
 
