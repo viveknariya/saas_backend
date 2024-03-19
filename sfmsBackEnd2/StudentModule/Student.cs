@@ -22,6 +22,7 @@ namespace sfmsbackend2.StudentModule
         public DateTime date_of_admission { get; set; }
         public DateTime date_of_birth { get; set; }
         public string gender { get; set; } = "";
+        public int fee_structure_id { get; set; }
     }
 }
 

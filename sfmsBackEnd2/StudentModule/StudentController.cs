@@ -3,7 +3,6 @@ using db;
 using Microsoft.AspNetCore.Mvc;
 using sfmsbackend2.StudentModule;
 
-
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 namespace sfmsBackEnd2.StudentModule
 {
@@ -31,7 +30,7 @@ namespace sfmsBackEnd2.StudentModule
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetByID(Guid id)
+        public IActionResult GetByID(int id)
         {
 
             using var conn = databaseConnection.GetConnection();
@@ -69,7 +68,6 @@ namespace sfmsBackEnd2.StudentModule
             conn.Query<Student>(
                 """
                 INSERT INTO Student (
-                    id,
                     first_name,
                     last_name,
                     standard,
@@ -79,10 +77,10 @@ namespace sfmsBackEnd2.StudentModule
                     school_name,
                     date_of_birth,
                     date_of_admission,
-                    gender
+                    gender,
+                    fee_structure_id
                     ) 
                     VALUES (
-                        @id,
                         @first_name,
                         @last_name,
                         @standard,
@@ -92,8 +90,9 @@ namespace sfmsBackEnd2.StudentModule
                         @school_name,
                         @date_of_birth,
                         @date_of_admission,
-                        @gender
-                        )
+                        @gender,
+                        @fee_structure_id
+                        );               
                 """, student);
 
             return Ok(student);
@@ -137,6 +136,7 @@ namespace sfmsBackEnd2.StudentModule
             return Ok();
 
         }
+
 
     }
 }

@@ -24,17 +24,24 @@ namespace sfmsBackEnd2.FeeModule
 
             conn.Open();
 
-            var feeTransections = conn.Query<FeeTransection>(
+            var feeTransections = conn.Query(
                 """
                 SELECT
-                	id,
-                    amount,
-                    student_id,
-                    comment,
-                    date_of_transection,
-                    mode_of_transection
+                   	ft.id,
+                    s.first_name,
+                    s.last_name,
+                    s.standard,
+                    ft.amount,
+                    ft.student_id,
+                    ft.comment,
+                    ft.date_of_transection,
+                    ft.mode_of_transection
                 FROM
-                	FeeTransection     
+                   	FeeTransection AS ft
+                LEFT JOIN 
+                    Student AS s 
+                ON 
+                    ft.student_id = s.id;
                 """
             );
 
@@ -147,7 +154,9 @@ namespace sfmsBackEnd2.FeeModule
                     @student_id,
                     @comment,
                     @date_of_transection,
-                    @mode_of_transection)         
+                    @mode_of_transection);
+                    
+                UPDATE FeeAnalytics SET paid_fee = paid_fee + @amount WHERE student_id = @student_id;
                 """, feeTransection);
 
             return Ok(feeTransection);
