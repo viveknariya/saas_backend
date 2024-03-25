@@ -2,6 +2,8 @@
 using db;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
+using sfmsbackend2.StudentModule;
+using System.Transactions;
 
 namespace sfmsBackEnd2.FeeModule
 {
@@ -11,15 +13,16 @@ namespace sfmsBackEnd2.FeeModule
     {
         private readonly IDatabaseConnection databaseConnection;
 
-        public FeeTransectionController(IDatabaseConnection databaseConnection){
+        public FeeTransectionController(IDatabaseConnection databaseConnection)
+        {
             this.databaseConnection = databaseConnection;
         }
-        
+
         [HttpGet]
         public IActionResult Get()
         {
 
-             using var conn = databaseConnection.GetConnection();
+            using var conn = databaseConnection.GetConnection();
 
 
             conn.Open();
@@ -31,6 +34,7 @@ namespace sfmsBackEnd2.FeeModule
                     s.first_name,
                     s.last_name,
                     s.standard,
+                    ft.is_credit,
                     ft.amount,
                     ft.student_id,
                     ft.comment,
@@ -53,7 +57,7 @@ namespace sfmsBackEnd2.FeeModule
         public IActionResult GetByID(int id)
         {
 
-             using var conn = databaseConnection.GetConnection();
+            using var conn = databaseConnection.GetConnection();
 
             conn.Open();
 
@@ -78,7 +82,7 @@ namespace sfmsBackEnd2.FeeModule
         [HttpGet("{skip}/{take}")]
         public IActionResult GetPage(int skip, int take)
         {
-             using var conn = databaseConnection.GetConnection();
+            using var conn = databaseConnection.GetConnection();
 
             conn.Open();
 
@@ -109,19 +113,14 @@ namespace sfmsBackEnd2.FeeModule
         public IActionResult GetByStudentID(int id)
         {
 
-             using var conn = databaseConnection.GetConnection();
+            using var conn = databaseConnection.GetConnection();
 
             conn.Open();
 
             var feeTransections = conn.Query<FeeTransection>(
                 """
                 SELECT
-                	id,
-                    amount,
-                    student_id,
-                    comment,
-                    date_of_transection,
-                    mode_of_transection
+                    *
                 FROM
                 	FeeTransection
                 WHERE
@@ -135,72 +134,51 @@ namespace sfmsBackEnd2.FeeModule
         [HttpPost]
         public IActionResult Create(FeeTransection feeTransection)
         {
-             using var conn = databaseConnection.GetConnection();
+            
+            using var conn = databaseConnection.GetConnection();
 
             conn.Open();
 
-            conn.Query<FeeTransection>(
-                """
-                INSERT INTO FeeTransection
-                	(id,
-                    amount,
-                    student_id,
-                    comment,
-                    date_of_transection,
-                    mode_of_transection)
-                VALUES
-                	(@id,
-                    @amount,
-                    @student_id,
-                    @comment,
-                    @date_of_transection,
-                    @mode_of_transection);
-                    
-                UPDATE FeeAnalytics SET paid_fee = paid_fee + @amount WHERE student_id = @student_id;
-                """, feeTransection);
+            using (var scope = new TransactionScope())
+            {
+                conn.Query<FeeTransection>(
+                    """
+                        INSERT INTO FeeTransection
+                        (id,
+                        amount,
+                        student_id,
+                        comment,
+                        date_of_transection,
+                        mode_of_transection,
+                        is_credit,
+                        type_of_fee
+                        )
+                        VALUES
+                        (@id,
+                        @amount,
+                        @student_id,
+                        @comment,
+                        @date_of_transection,
+                        @mode_of_transection,
+                        @is_credit,
+                        @type_of_fee
+                        );
+                     """, feeTransection);
+
+                if(feeTransection.is_credit == true)
+                {
+                    conn.Execute("UPDATE FeeAnalytics SET paid_fee = paid_fee + @amount WHERE student_id = @student_id;", feeTransection);
+                }
+                else
+                {
+                    conn.Execute("UPDATE FeeAnalytics SET total_fee = total_fee + @amount WHERE student_id = @student_id;", feeTransection);
+                }
+
+                scope.Complete();
+            }
 
             return Ok(feeTransection);
-
-        }
-
-        [HttpPut]
-        public IActionResult Update(FeeTransection feeTransection)
-        {
-
-
-             using var conn = databaseConnection.GetConnection();
-
-            conn.Open();
-
-            var students = conn.Query<FeeTransection>(
-                """
-                UPDATE FeeTransection SET
-                    amount = @amount,
-                    student_id = @student_id,
-                    comment = @comment,
-                    date_of_transection = @date_of_transection,
-                    mode_of_transection = @mode_of_transection
-                WHERE
-                	id = @id
-                """, feeTransection);
-
-            return Ok(feeTransection);
-
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-
-             using var conn = databaseConnection.GetConnection();
-
-
-            conn.Open();
-
-            conn.Query<FeeTransection>("DELETE FROM FeeTransection WHERE id = @id", new { id = id });
-
-            return Ok();
-
+            
         }
     }
 }

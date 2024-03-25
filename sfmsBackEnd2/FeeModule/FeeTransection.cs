@@ -8,5 +8,7 @@
         public string comment { get; set; }
         public DateTime date_of_transection { get; set; }
         public string mode_of_transection { get; set; }
+        public bool is_credit { get; set; }
+        public string type_of_fee { get; set; }
     }
 }
